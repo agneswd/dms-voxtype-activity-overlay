@@ -24,16 +24,24 @@ PluginComponent {
     property string transcriptText: ""
     property var barValues: Array.from({ length: 12 }, () => 0)
 
+    function resetOverlayState(clearTranscript) {
+        barValues = Array.from({ length: 12 }, () => 0)
+
+        if (clearTranscript) {
+            transcriptVisible = false
+            transcriptText = ""
+        }
+
+        transcriptHideTimer.stop()
+        transcriptFetchDelay.stop()
+    }
+
     onIsRecordingChanged: {
         if (!isRecording)
             barValues = Array.from({ length: 12 }, () => 0)
 
-        if (isRecording) {
-            transcriptVisible = false
-            transcriptText = ""
-            transcriptHideTimer.stop()
-            transcriptFetchDelay.stop()
-        }
+        if (isRecording)
+            resetOverlayState(true)
     }
 
     Timer {
@@ -144,6 +152,11 @@ PluginComponent {
         implicitHeight: 360
         margins.bottom: 0
         color: "transparent"
+
+        onVisibleChanged: {
+            if (visible && root.isRecording)
+                root.resetOverlayState(true)
+        }
 
         Item {
             id: clickthroughMask
