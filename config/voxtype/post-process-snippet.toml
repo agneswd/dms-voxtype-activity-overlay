@@ -1,0 +1,3 @@
+[output.post_process]
+command = "sh /home/master/.local/bin/dms-voxtype-activity-overlay-capture"
+timeout_ms = 2000

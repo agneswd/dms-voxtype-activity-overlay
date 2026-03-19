@@ -1,0 +1,15 @@
+{
+    "id": "voxtypeActivityOverlay",
+    "name": "VoxType Activity Overlay",
+    "description": "Displays a live microphone activity overlay while VoxType is recording.",
+    "version": "1.0.0",
+    "author": "agneswd",
+    "type": "daemon",
+    "component": "./DmsVoxtypeActivityOverlay.qml",
+    "settings": "./DmsVoxtypeActivityOverlaySettings.qml",
+    "icon": "mic",
+    "permissions": [
+        "settings_read",
+        "settings_write"
+    ]
+}

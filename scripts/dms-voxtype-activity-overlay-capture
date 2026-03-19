@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+set -eu
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/voxtype"
+mkdir -p "$state_dir"
+
+exec tee "$state_dir/activity-overlay-last.txt"

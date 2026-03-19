@@ -1,0 +1,6 @@
+# Local editor state
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
