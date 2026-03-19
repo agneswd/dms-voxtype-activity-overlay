@@ -125,6 +125,11 @@ PluginComponent {
     // it works on any screen width without hardcoding pixels.
     PanelWindow {
         id: overlay
+        visible: root.isRecording || (root.showTranscriptText && root.transcriptVisible)
+        mask: Region {
+            item: clickthroughMask
+            intersection: Intersection.Xor
+        }
 
         anchors {
             bottom: true
@@ -139,6 +144,11 @@ PluginComponent {
         implicitHeight: 360
         margins.bottom: 0
         color: "transparent"
+
+        Item {
+            id: clickthroughMask
+            anchors.fill: parent
+        }
 
         Rectangle {
             id: transcriptBubble
