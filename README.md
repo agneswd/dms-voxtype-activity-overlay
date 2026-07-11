@@ -5,9 +5,9 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) daemon p
 ## Features
 
 <p align="center">
-  <img src="https://files.catbox.moe/kdyuz6.png" alt="Visualizer pill" width="400"/>
+  <img src="assets/screenshot-pill.png" alt="Visualizer pill" width="400"/>
   <br/>
-  <img src="https://files.catbox.moe/g3z8ez.png" alt="Full overlay" width="600"/>
+  <img src="assets/screenshot-overlay.png" alt="Full overlay" width="600"/>
 </p>
 
 - Bottom-of-screen audio visualizer pill driven by Cava (12 frequency bars)
