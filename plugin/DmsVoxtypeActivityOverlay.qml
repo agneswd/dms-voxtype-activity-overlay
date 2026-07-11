@@ -10,6 +10,13 @@ import qs.Modules.Plugins
 PluginComponent {
     id: root
 
+    property string pluginDir: {
+        var url = Qt.resolvedUrl(".")
+        var path = url.toString()
+        if (path.indexOf("file://") === 0) path = path.substring(7)
+        return path
+    }
+
     // ── State ─────────────────────────────────────────────────
     property string currentState: "idle"
     property int visualizerSensitivity: pluginData.visualizerSensitivity || 180
@@ -18,7 +25,10 @@ PluginComponent {
     property int transcriptDisplayMs: pluginData.transcriptDisplayMs || 3600
     property real pillOpacityValue: (pluginData.pillOpacity || 94) / 100.0
     property real transcriptOpacityValue: (pluginData.transcriptOpacity || 96) / 100.0
-    property string transcriptCapturePath: ((Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/voxtype/activity-overlay-last.txt")
+    property string transcriptCapturePath: {
+        var state = Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"
+        return state + "/voxtype/activity-overlay-last.txt"
+    }
     property bool isRecording: false
     property bool transcriptVisible: false
     property string transcriptText: ""

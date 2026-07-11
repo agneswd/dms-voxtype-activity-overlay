@@ -1,15 +1,19 @@
 {
-    "id": "voxtypeActivityOverlay",
-    "name": "VoxType Activity Overlay",
-    "description": "Displays a live microphone activity overlay while VoxType is recording.",
-    "version": "1.0.0",
-    "author": "agneswd",
-    "type": "daemon",
-    "component": "./DmsVoxtypeActivityOverlay.qml",
-    "settings": "./DmsVoxtypeActivityOverlaySettings.qml",
-    "icon": "mic",
-    "permissions": [
-        "settings_read",
-        "settings_write"
-    ]
+  "id": "voxtypeActivityOverlay",
+  "name": "VoxType Activity Overlay",
+  "description": "Live microphone activity overlay while VoxType is recording. Shows a Cava audio visualizer pill and final transcript bubble.",
+  "version": "1.0.0",
+  "author": "agneswd",
+  "type": "daemon",
+  "capabilities": ["daemon"],
+  "component": "./DmsVoxtypeActivityOverlay.qml",
+  "settings": "./DmsVoxtypeActivityOverlaySettings.qml",
+  "icon": "mic",
+  "requires_dms": ">=1.5.0",
+  "requires": ["voxtype", "cava"],
+  "dependencies": ["voxtype", "cava"],
+  "permissions": [
+    "settings_read",
+    "settings_write"
+  ]
 }
