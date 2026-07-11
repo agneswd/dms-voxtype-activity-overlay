@@ -19,14 +19,30 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) daemon p
 
 ## Install
 
-### 1. Clone the plugin
+### Quick start (recommended)
+
+```sh
+git clone https://github.com/agneswd/dms-voxtype-activity-overlay \
+  ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay
+sh ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/setup.sh
+systemctl --user restart voxtype.service
+dms restart
+```
+
+Then enable in **DMS Settings → Plugins → Scan for Plugins → VoxType Activity Overlay**.
+
+### Manual setup
+
+Alternatively, follow the steps below if you prefer to configure things yourself.
+
+**1. Clone the plugin**
 
 ```sh
 git clone https://github.com/agneswd/dms-voxtype-activity-overlay \
   ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay
 ```
 
-### 2. Configure Cava
+**2. Configure Cava**
 
 ```sh
 mkdir -p ~/.config/cava
@@ -34,9 +50,9 @@ cp ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/config/cava/
   ~/.config/cava/dms-voxtype-activity-overlay.ini
 ```
 
-### 3. Connect VoxType to the overlay
+**3. Connect VoxType to the overlay**
 
-VoxType needs to run the capture script after each transcription. Add this to your `~/.config/voxtype/config.toml`:
+Add this to your `~/.config/voxtype/config.toml`:
 
 ```toml
 [output.post_process]
@@ -44,19 +60,18 @@ command = "sh ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/p
 timeout_ms = 2000
 ```
 
-### 4. Restart services
+**4. Restart services**
 
 ```sh
 systemctl --user restart voxtype.service
 dms restart
 ```
 
-### 5. Enable in DMS
+**5. Enable in DMS**
 
 1. Open **Settings - Plugins**
 2. Click **Scan for Plugins**
 3. Enable **VoxType Activity Overlay**
-4. Restart shell: `dms restart`
 
 ## Settings
 
@@ -94,6 +109,7 @@ dms-voxtype-activity-overlay/
 ├── config/              # External program configs
 │   ├── cava/            # Cava visualizer config
 │   └── voxtype/         # VoxType config snippet
+├── setup.sh             # One-command setup script
 ├── LICENSE
 └── README.md
 ```
