@@ -11,6 +11,12 @@ PluginComponent {
     id: root
 
     // ── State ─────────────────────────────────────────────────
+    property string pluginDir: {
+        var url = Qt.resolvedUrl(".")
+        var path = url.toString()
+        if (path.indexOf("file://") === 0) path = path.substring(7)
+        return path
+    }
     property string homeDir: Quickshell.env("HOME") || "/home/" + Quickshell.env("USER")
     property string stateDir: (Quickshell.env("XDG_STATE_HOME") || homeDir + "/.local/state") + "/voxtype"
     property string currentState: "idle"
@@ -124,6 +130,20 @@ PluginComponent {
                 if (vals.length > 0) root.barValues = vals
             }
         }
+    }
+
+    // ── Auto-setup on startup ─────────────────────────────────
+    // Runs setup.sh to ensure Cava config and VoxType hook are
+    // in place. setup.sh has duplicate detection so it's safe
+    // to run on every launch.
+    Process {
+        id: setupProc
+        command: ["sh", root.pluginDir + "setup.sh"]
+        running: false
+    }
+
+    Component.onCompleted: {
+        try { setupProc.running = true } catch (e) {}
     }
 
     // ── Overlay window ────────────────────────────────────────
