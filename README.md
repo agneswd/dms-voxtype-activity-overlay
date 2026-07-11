@@ -13,7 +13,7 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) daemon p
 ## Requirements
 
 - [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) >= 1.5.0
-- [VoxType](https://github.com/agneswd/voxtype) speech-to-text daemon
+- [VoxType](https://github.com/peteonrails/voxtype) speech-to-text daemon
 - [cava](https://github.com/karlstav/cava) audio visualizer
 - [PipeWire](https://pipewire.org) (for mic capture)
 
