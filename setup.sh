@@ -14,13 +14,13 @@ cp -n "$PLUGIN_DIR/config/cava/dms-voxtype-activity-overlay.ini" \
       "$HOME/.config/cava/dms-voxtype-activity-overlay.ini" 2>/dev/null || true
 
 echo "[2/3] Making capture script executable..."
-chmod +x "$PLUGIN_DIR/plugin/scripts/dms-voxtype-activity-overlay-capture" 2>/dev/null || true
+chmod +x "$PLUGIN_DIR/scripts/dms-voxtype-activity-overlay-capture" 2>/dev/null || true
 
 echo "[3/3] Configuring VoxType post_process hook..."
 VOXTYPE_CONFIG="$HOME/.config/voxtype/config.toml"
 SNIPPET="
 [output.post_process]
-command = \"sh $HOME/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/plugin/scripts/dms-voxtype-activity-overlay-capture\"
+command = \"sh $HOME/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/scripts/dms-voxtype-activity-overlay-capture\"
 timeout_ms = 2000"
 
 if [ -f "$VOXTYPE_CONFIG" ] && grep -q 'dms-voxtype-activity-overlay-capture' "$VOXTYPE_CONFIG" 2>/dev/null; then

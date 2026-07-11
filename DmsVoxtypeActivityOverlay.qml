@@ -10,13 +10,6 @@ import qs.Modules.Plugins
 PluginComponent {
     id: root
 
-    property string pluginDir: {
-        var url = Qt.resolvedUrl(".")
-        var path = url.toString()
-        if (path.indexOf("file://") === 0) path = path.substring(7)
-        return path
-    }
-
     // ── State ─────────────────────────────────────────────────
     property string currentState: "idle"
     property int visualizerSensitivity: pluginData.visualizerSensitivity || 180

@@ -12,10 +12,10 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) daemon p
 
 ## Requirements
 
-- DankMaterialShell >= 1.5.0
-- [VoxType](https://github.com/agneswd/VoxType) speech-to-text daemon
-- `cava` audio visualizer
-- PipeWire (for mic capture)
+- [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) >= 1.5.0
+- [VoxType](https://github.com/agneswd/voxtype) speech-to-text daemon
+- [cava](https://github.com/karlstav/cava) audio visualizer
+- [PipeWire](https://pipewire.org) (for mic capture)
 
 ## Install
 
@@ -56,7 +56,7 @@ Add this to your `~/.config/voxtype/config.toml`:
 
 ```toml
 [output.post_process]
-command = "sh ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/plugin/scripts/dms-voxtype-activity-overlay-capture"
+command = "sh ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/scripts/dms-voxtype-activity-overlay-capture"
 timeout_ms = 2000
 ```
 
@@ -101,15 +101,14 @@ The overlay is a full-width transparent layer-shell window pinned to the bottom 
 
 ```
 dms-voxtype-activity-overlay/
-├── plugin/              # DMS plugin files
-│   ├── DmsVoxtypeActivityOverlay.qml
-│   ├── DmsVoxtypeActivityOverlaySettings.qml
-│   ├── plugin.json
-│   └── scripts/         # Helper script for VoxType post_process hook
-├── config/              # External program configs
-│   ├── cava/            # Cava visualizer config
-│   └── voxtype/         # VoxType config snippet
-├── setup.sh             # One-command setup script
+├── DmsVoxtypeActivityOverlay.qml
+├── DmsVoxtypeActivityOverlaySettings.qml
+├── plugin.json
+├── scripts/              # Helper script for VoxType post_process hook
+├── config/               # External program configs
+│   ├── cava/             # Cava visualizer config
+│   └── voxtype/          # VoxType config snippet
+├── setup.sh              # One-command setup script
 ├── LICENSE
 └── README.md
 ```
