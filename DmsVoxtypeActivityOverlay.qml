@@ -11,6 +11,8 @@ PluginComponent {
     id: root
 
     // ── State ─────────────────────────────────────────────────
+    property string homeDir: Quickshell.env("HOME") || "/home/" + Quickshell.env("USER")
+    property string stateDir: (Quickshell.env("XDG_STATE_HOME") || homeDir + "/.local/state") + "/voxtype"
     property string currentState: "idle"
     property int visualizerSensitivity: pluginData.visualizerSensitivity || 180
     property real visualizerGain: visualizerSensitivity / 100.0
@@ -18,10 +20,7 @@ PluginComponent {
     property int transcriptDisplayMs: pluginData.transcriptDisplayMs || 3600
     property real pillOpacityValue: (pluginData.pillOpacity || 94) / 100.0
     property real transcriptOpacityValue: (pluginData.transcriptOpacity || 96) / 100.0
-    property string transcriptCapturePath: {
-        var state = Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state"
-        return state + "/voxtype/activity-overlay-last.txt"
-    }
+    property string transcriptCapturePath: stateDir + "/activity-overlay-last.txt"
     property bool isRecording: false
     property bool transcriptVisible: false
     property string transcriptText: ""
@@ -40,9 +39,6 @@ PluginComponent {
     }
 
     onIsRecordingChanged: {
-        if (!isRecording)
-            barValues = Array.from({ length: 12 }, () => 0)
-
         if (isRecording)
             resetOverlayState(true)
     }

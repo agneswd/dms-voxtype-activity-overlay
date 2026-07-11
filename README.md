@@ -1,8 +1,14 @@
 # VoxType Activity Overlay
 
-A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) daemon plugin that shows a live microphone activity overlay while [VoxType](https://github.com/agneswd/VoxType) is recording.
+A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) daemon plugin that shows a live microphone activity overlay while [VoxType](https://github.com/peteonrails/voxtype) is recording.
 
 ## Features
+
+<p align="center">
+  <img src="https://files.catbox.moe/kdyuz6.png" alt="Visualizer pill" width="400"/>
+  <br/>
+  <img src="https://files.catbox.moe/g3z8ez.png" alt="Full overlay" width="600"/>
+</p>
 
 - Bottom-of-screen audio visualizer pill driven by Cava (12 frequency bars)
 - Animated bar heights that react to microphone input
