@@ -58,13 +58,15 @@ cp ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/config/cava/
 
 **3. Connect VoxType to the overlay**
 
-Add this to your `~/.config/voxtype/config.toml`:
+Run the setup script:
 
-```toml
-[output.post_process]
-command = "sh ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/scripts/dms-voxtype-activity-overlay-capture"
-timeout_ms = 2000
+```sh
+sh ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/setup.sh
 ```
+
+If you already use a VoxType post-processing command, setup preserves it and
+runs the transcript capture afterward. Unsupported or ambiguous configurations
+are left untouched with an explanation instead of being rewritten.
 
 **4. Restart services**
 
@@ -78,6 +80,15 @@ dms restart
 1. Open **Settings - Plugins**
 2. Click **Scan for Plugins**
 3. Enable **VoxType Activity Overlay**
+
+### Uninstall
+
+```sh
+sh ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/setup.sh --uninstall
+```
+
+This restores the post-processing block that was present at installation and
+removes files created by setup.
 
 ## Settings
 
@@ -112,8 +123,8 @@ dms-voxtype-activity-overlay/
 ├── plugin.json
 ├── scripts/              # Helper script for VoxType post_process hook
 ├── config/               # External program configs
-│   ├── cava/             # Cava visualizer config
-│   └── voxtype/          # VoxType config snippet
+│   └── cava/             # Cava visualizer config
+├── tests/                # Setup and uninstall checks
 ├── setup.sh              # One-command setup script
 ├── LICENSE
 └── README.md

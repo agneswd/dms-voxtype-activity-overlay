@@ -1,3 +1,0 @@
-[output.post_process]
-command = "sh ~/.config/DankMaterialShell/plugins/dms-voxtype-activity-overlay/scripts/dms-voxtype-activity-overlay-capture"
-timeout_ms = 2000
