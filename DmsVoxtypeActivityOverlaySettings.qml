@@ -1,72 +1,136 @@
 import QtQuick
 import qs.Common
-import qs.Widgets
 import qs.Modules.Plugins
+import "./dms-common"
 
 PluginSettings {
     id: root
     pluginId: "voxtypeActivityOverlay"
 
-    StyledText {
-        width: parent.width
-        text: "VoxType Activity Overlay"
-        font.pixelSize: Theme.fontSizeLarge
-        font.weight: Font.Bold
-        color: Theme.surfaceText
+    SettingsCard {
+        SectionTitle {
+            text: I18n.tr("Visualizer")
+            icon: "graphic_eq"
+            showReset: visualizerMode.isDirty || visualizerSensitivity.isDirty || showCancelButton.isDirty
+            onResetClicked: {
+                visualizerMode.resetToDefault()
+                visualizerSensitivity.resetToDefault()
+                showCancelButton.resetToDefault()
+            }
+        }
+
+        SelectionSettingPlus {
+            id: visualizerMode
+            settingKey: "visualizerMode"
+            label: I18n.tr("Visualizer Mode")
+            description: I18n.tr("Show a smooth scrolling waveform or live frequency bars while recording.")
+            options: [
+                { label: I18n.tr("Scrolling Waveform"), value: "waveform" },
+                { label: I18n.tr("Frequency Bars"), value: "bars" }
+            ]
+            defaultValue: "waveform"
+        }
+
+        Separator {}
+
+        SliderSettingPlus {
+            id: visualizerSensitivity
+            settingKey: "visualizerSensitivity"
+            label: I18n.tr("Visualizer Sensitivity")
+            description: I18n.tr("Scale how much the visualizer reacts without changing VoxType itself.")
+            defaultValue: 180
+            minimum: 50
+            maximum: 300
+            unit: "%"
+            leftLabel: "50%"
+            rightLabel: "300%"
+        }
+
+        Separator {}
+
+        ToggleSettingPlus {
+            id: showCancelButton
+            settingKey: "showCancelButton"
+            label: I18n.tr("Show Cancel Button")
+            description: I18n.tr("Show a button in both visualizer modes that cancels the current recording without transcribing it.")
+            defaultValue: true
+        }
     }
 
-    StyledText {
-        width: parent.width
-        text: "Tune the visualizer gain, transcript bubble behavior, and overlay opacity. The transcript bubble reads the final text from a VoxType capture hook, so it works with clipboard and wtype output modes."
-        font.pixelSize: Theme.fontSizeSmall
-        color: Theme.surfaceVariantText
-        wrapMode: Text.WordWrap
+    SettingsCard {
+        SectionTitle {
+            text: I18n.tr("Transcript")
+            icon: "subtitles"
+            showReset: showTranscriptText.isDirty || transcriptDisplayMs.isDirty
+            onResetClicked: {
+                showTranscriptText.resetToDefault()
+                transcriptDisplayMs.resetToDefault()
+            }
+        }
+
+        ToggleSettingPlus {
+            id: showTranscriptText
+            settingKey: "showTranscriptText"
+            label: I18n.tr("Show Final Transcript")
+            description: I18n.tr("Display the final recognized text after VoxType finishes transcribing.")
+            defaultValue: true
+        }
+
+        Separator { visible: showTranscriptText.value }
+
+        SliderSettingPlus {
+            id: transcriptDisplayMs
+            settingKey: "transcriptDisplayMs"
+            label: I18n.tr("Transcript Time on Screen")
+            description: I18n.tr("Choose how long the final transcript stays visible.")
+            defaultValue: 3600
+            minimum: 1000
+            maximum: 8000
+            unit: "ms"
+            leftLabel: "1 sec"
+            rightLabel: "8 sec"
+            visible: showTranscriptText.value
+        }
     }
 
-    SliderSetting {
-        settingKey: "visualizerSensitivity"
-        label: "Visualizer Sensitivity"
-        description: "Scales how much the bars move without changing VoxType itself. Higher values make the visualizer react more aggressively."
-        defaultValue: 180
-        minimum: 50
-        maximum: 300
-        unit: "%"
-    }
+    SettingsCard {
+        SectionTitle {
+            text: I18n.tr("Appearance")
+            icon: "opacity"
+            showReset: pillOpacity.isDirty || transcriptOpacity.isDirty
+            onResetClicked: {
+                pillOpacity.resetToDefault()
+                transcriptOpacity.resetToDefault()
+            }
+        }
 
-    ToggleSetting {
-        settingKey: "showTranscriptText"
-        label: "Show Final Transcript"
-        description: "Display the final recognized text above the overlay after VoxType finishes transcribing."
-        defaultValue: true
-    }
+        SliderSettingPlus {
+            id: pillOpacity
+            settingKey: "pillOpacity"
+            label: I18n.tr("Pill Opacity")
+            description: I18n.tr("Set the opacity of the recording pill.")
+            defaultValue: 94
+            minimum: 10
+            maximum: 100
+            unit: "%"
+            leftLabel: "10%"
+            rightLabel: "100%"
+        }
 
-    SliderSetting {
-        settingKey: "transcriptDisplayMs"
-        label: "Transcript Time On Screen"
-        description: "How long the final transcript bubble stays visible."
-        defaultValue: 3600
-        minimum: 1000
-        maximum: 8000
-        unit: "ms"
-    }
+        Separator { visible: showTranscriptText.value }
 
-    SliderSetting {
-        settingKey: "pillOpacity"
-        label: "Pill Opacity"
-        description: "Overall opacity of the recording pill."
-        defaultValue: 94
-        minimum: 10
-        maximum: 100
-        unit: "%"
-    }
-
-    SliderSetting {
-        settingKey: "transcriptOpacity"
-        label: "Transcript Opacity"
-        description: "Overall opacity of the transcript bubble."
-        defaultValue: 96
-        minimum: 10
-        maximum: 100
-        unit: "%"
+        SliderSettingPlus {
+            id: transcriptOpacity
+            settingKey: "transcriptOpacity"
+            label: I18n.tr("Transcript Opacity")
+            description: I18n.tr("Set the opacity of the final transcript bubble.")
+            defaultValue: 96
+            minimum: 10
+            maximum: 100
+            unit: "%"
+            leftLabel: "10%"
+            rightLabel: "100%"
+            visible: showTranscriptText.value
+        }
     }
 }

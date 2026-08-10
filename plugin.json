@@ -1,9 +1,11 @@
 {
+  "$schema": "https://github.com/AvengeMedia/DankMaterialShell/raw/refs/heads/master/PLUGINS/plugin-schema.json",
   "id": "voxtypeActivityOverlay",
   "name": "VoxType Activity Overlay",
-  "description": "Live microphone activity overlay while VoxType is recording. Shows a Cava audio visualizer pill and final transcript bubble.",
-  "version": "1.1.1",
+  "description": "Live microphone activity overlay while VoxType is recording. Shows frequency bars or a scrolling waveform, a cancel button, and the final transcript.",
+  "version": "1.2.0",
   "author": "agneswd",
+  "license": "MIT",
   "type": "daemon",
   "capabilities": ["daemon"],
   "component": "./DmsVoxtypeActivityOverlay.qml",
@@ -15,6 +17,7 @@
   "dependencies": ["voxtype", "cava"],
   "permissions": [
     "settings_read",
-    "settings_write"
+    "settings_write",
+    "process"
   ]
 }
