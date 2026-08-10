@@ -3,6 +3,8 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import qs.Common
+import qs.Services
+import qs.Widgets
 import qs.Modules.Plugins
 
 // Daemon plugin: shows a Cava audio-visualization pill whenever
@@ -14,8 +16,10 @@ PluginComponent {
     property string homeDir: Quickshell.env("HOME") || "/home/" + Quickshell.env("USER")
     property string stateDir: (Quickshell.env("XDG_STATE_HOME") || homeDir + "/.local/state") + "/voxtype"
     property string currentState: "idle"
+    property string visualizerMode: pluginData.visualizerMode || "waveform"
     property int visualizerSensitivity: pluginData.visualizerSensitivity || 180
     property real visualizerGain: visualizerSensitivity / 100.0
+    property bool showCancelButton: pluginData.showCancelButton !== undefined ? pluginData.showCancelButton : true
     property bool showTranscriptText: pluginData.showTranscriptText !== undefined ? pluginData.showTranscriptText : true
     property int transcriptDisplayMs: pluginData.transcriptDisplayMs || 3600
     property real pillOpacityValue: (pluginData.pillOpacity || 94) / 100.0
@@ -25,9 +29,13 @@ PluginComponent {
     property bool transcriptVisible: false
     property string transcriptText: ""
     property var barValues: Array.from({ length: 12 }, () => 0)
+    property var waveformSamples: Array.from({ length: 26 }, () => 0)
+    property real waveformScrollProgress: 0
 
     function resetOverlayState(clearTranscript) {
         barValues = Array.from({ length: 12 }, () => 0)
+        waveformSamples = Array.from({ length: 26 }, () => 0)
+        waveformScrollProgress = 0
 
         if (clearTranscript) {
             transcriptVisible = false
@@ -36,6 +44,18 @@ PluginComponent {
 
         transcriptHideTimer.stop()
         transcriptFetchDelay.stop()
+    }
+
+    function appendWaveformSample() {
+        const peak = barValues.length ? Math.max.apply(Math, barValues) : 0
+        const samples = waveformSamples.slice(1)
+        samples.push(Math.min(1.0, (peak / 100.0) * visualizerGain))
+        waveformSamples = samples
+    }
+
+    function cancelRecording() {
+        if (isRecording && !cancelProcess.running)
+            cancelProcess.running = true
     }
 
     onIsRecordingChanged: {
@@ -126,6 +146,51 @@ PluginComponent {
         }
     }
 
+    SequentialAnimation {
+        running: root.isRecording && root.visualizerMode === "waveform"
+        loops: Animation.Infinite
+
+        NumberAnimation {
+            target: root
+            property: "waveformScrollProgress"
+            from: 0
+            to: 1
+            duration: 50
+            easing.type: Easing.Linear
+        }
+
+        ScriptAction {
+            script: {
+                root.appendWaveformSample()
+                root.waveformScrollProgress = 0
+            }
+        }
+    }
+
+    Process {
+        id: cancelProcess
+        property string errorOutput: ""
+
+        command: ["voxtype", "record", "cancel"]
+        running: false
+
+        stderr: StdioCollector {
+            onStreamFinished: cancelProcess.errorOutput = text
+        }
+
+        onRunningChanged: {
+            if (running)
+                errorOutput = ""
+        }
+
+        onExited: exitCode => {
+            if (exitCode !== 0) {
+                const details = errorOutput.trim() || "voxtype record cancel exited with code " + exitCode
+                ToastService.showError("Failed to cancel VoxType", details, "", "voxtype-activity-overlay-cancel")
+            }
+        }
+    }
+
     // ── Overlay window ────────────────────────────────────────
     // Full-width transparent layer-shell window pinned to the
     // bottom edge; the actual pill is centered inside it so
@@ -134,8 +199,7 @@ PluginComponent {
         id: overlay
         visible: root.isRecording || (root.showTranscriptText && root.transcriptVisible)
         mask: Region {
-            item: clickthroughMask
-            intersection: Intersection.Xor
+            item: cancelButton
         }
 
         anchors {
@@ -155,11 +219,6 @@ PluginComponent {
         onVisibleChanged: {
             if (visible && root.isRecording)
                 root.resetOverlayState(true)
-        }
-
-        Item {
-            id: clickthroughMask
-            anchors.fill: parent
         }
 
         Rectangle {
@@ -208,11 +267,11 @@ PluginComponent {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 12
-            width: 176
+            width: root.showCancelButton ? 216 : 176
             height: 48
             radius: height / 2
 
-            // Animate in/out — opacity on Item is valid
+            // Animate in/out - opacity on Item is valid
             opacity: root.isRecording ? root.pillOpacityValue : 0.0
             Behavior on opacity {
                 NumberAnimation { duration: 220; easing.type: Easing.InOutQuad }
@@ -224,36 +283,82 @@ PluginComponent {
 
             Row {
                 anchors.centerIn: parent
-                spacing: 4
+                spacing: 8
 
-                Repeater {
-                    model: 12
+                Item {
+                    width: 144
+                    height: 36
+                    anchors.verticalCenter: parent.verticalCenter
+                    clip: true
 
-                    Rectangle {
-                        required property int index
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 4
+                        visible: root.visualizerMode !== "waveform"
 
-                        // Level: 0.0 – 1.0 from the latest Cava frame
-                        property real level: root.barValues.length > index
-                            ? Math.min(1.0, (root.barValues[index] / 100.0) * root.visualizerGain)
-                            : 0.0
+                        Repeater {
+                            model: 12
 
-                        width: 4
-                        height: 6 + level * 26
-                        radius: 2
-                        anchors.verticalCenter: parent.verticalCenter
+                            Rectangle {
+                                required property int index
 
-                        // Blend from muted surface tone into the active accent.
-                        color: Qt.rgba(
-                            Theme.surfaceVariant.r + (Theme.primary.r - Theme.surfaceVariant.r) * level,
-                            Theme.surfaceVariant.g + (Theme.primary.g - Theme.surfaceVariant.g) * level,
-                            Theme.surfaceVariant.b + (Theme.primary.b - Theme.surfaceVariant.b) * level,
-                            0.70 + level * 0.22
-                        )
+                                // Level: 0.0 - 1.0 from the latest Cava frame
+                                property real level: root.barValues.length > index
+                                    ? Math.min(1.0, (root.barValues[index] / 100.0) * root.visualizerGain)
+                                    : 0.0
 
-                        Behavior on height {
-                            NumberAnimation { duration: 55; easing.type: Easing.OutQuad }
+                                width: 4
+                                height: 6 + level * 26
+                                radius: 2
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                color: Qt.rgba(
+                                    Theme.surfaceVariant.r + (Theme.primary.r - Theme.surfaceVariant.r) * level,
+                                    Theme.surfaceVariant.g + (Theme.primary.g - Theme.surfaceVariant.g) * level,
+                                    Theme.surfaceVariant.b + (Theme.primary.b - Theme.surfaceVariant.b) * level,
+                                    0.70 + level * 0.22
+                                )
+
+                                Behavior on height {
+                                    NumberAnimation { duration: 55; easing.type: Easing.OutQuad }
+                                }
+                            }
                         }
                     }
+
+                    Item {
+                        anchors.fill: parent
+                        visible: root.visualizerMode === "waveform"
+
+                        Repeater {
+                            model: 26
+
+                            Rectangle {
+                                required property int index
+                                property real level: root.waveformSamples[index] || 0
+
+                                x: parent.width - width - (25 - index + root.waveformScrollProgress) * 5.5
+                                width: 3
+                                height: Math.max(4, level * 32)
+                                radius: 1.5
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: Theme.primary
+                            }
+                        }
+                    }
+                }
+
+                DankActionButton {
+                    id: cancelButton
+                    visible: root.showCancelButton && root.isRecording
+                    anchors.verticalCenter: parent.verticalCenter
+                    buttonSize: 32
+                    iconName: "close"
+                    iconColor: Theme.error
+                    tooltipText: "Cancel recording"
+                    enabled: !cancelProcess.running
+                    opacity: enabled ? 1 : 0.5
+                    onClicked: root.cancelRecording()
                 }
             }
         }

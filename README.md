@@ -10,7 +10,9 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) daemon p
   <img src="assets/screenshot-overlay.png" alt="Full overlay" width="600"/>
 </p>
 
-- Bottom-of-screen audio visualizer pill driven by Cava (12 frequency bars)
+- Bottom-of-screen audio visualizer pill driven by Cava
+- Frequency-bar and scrolling-waveform visualizer modes
+- Optional button to cancel the current recording
 - Animated bar heights that react to microphone input
 - Optional final transcript bubble that appears after VoxType finishes transcribing
 - Configurable visualizer sensitivity, transcript timing, and overlay opacity
@@ -94,7 +96,9 @@ removes files created by setup.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
+| Visualizer Mode | Scrolling Waveform | Switch between a smooth scrolling waveform and live frequency bars |
 | Visualizer Sensitivity | 180% | Scales how much the bars react to mic input |
+| Show Cancel Button | on | Cancel the current recording without transcribing it |
 | Show Final Transcript | on | Display the final recognized text after transcribing |
 | Transcript Time On Screen | 3600ms | How long the transcript bubble stays visible |
 | Pill Opacity | 94% | Overall opacity of the recording pill |
@@ -133,3 +137,7 @@ dms-voxtype-activity-overlay/
 ## License
 
 MIT
+
+Waveform mode and the cancel interaction were inspired by [VoxType OSD](https://github.com/irisblur17/dms-voxtype-osd) by Iris Blur.
+
+The settings UI uses selected components from [dms-common](https://github.com/hthienloc/dms-common) by Loc Huynh.
