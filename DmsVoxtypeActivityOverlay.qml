@@ -59,15 +59,24 @@ PluginComponent {
     }
 
     onIsRecordingChanged: {
-        if (isRecording)
+        if (isRecording) {
             resetOverlayState(true)
+            transcriptResetter.running = true
+        }
     }
 
     Timer {
         id: transcriptFetchDelay
         interval: 220
         repeat: false
-        onTriggered: transcriptReader.running = true
+        onTriggered: {
+            // Do not read the previous transcript while its file is being reset.
+            if (transcriptResetter.running) {
+                restart()
+                return
+            }
+            transcriptReader.running = true
+        }
     }
 
     Timer {
@@ -75,6 +84,12 @@ PluginComponent {
         interval: root.transcriptDisplayMs
         repeat: false
         onTriggered: root.transcriptVisible = false
+    }
+
+    Process {
+        id: transcriptResetter
+        command: ["rm", "-f", "--", root.transcriptCapturePath]
+        running: false
     }
 
     Process {
