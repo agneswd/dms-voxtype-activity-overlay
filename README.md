@@ -14,6 +14,7 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) daemon p
 - Frequency-bar and scrolling-waveform visualizer modes
 - Optional button to cancel the current recording
 - Animated bar heights that react to microphone input
+- Spinner in the pill while VoxType transcribes, with cancel still available
 - Optional final transcript bubble that appears after VoxType finishes transcribing
 - Configurable visualizer sensitivity, transcript timing, and overlay opacity
 - All settings configurable from DMS settings UI
@@ -98,7 +99,7 @@ removes files created by setup.
 |---------|---------|-------------|
 | Visualizer Mode | Scrolling Waveform | Switch between a smooth scrolling waveform and live frequency bars |
 | Visualizer Sensitivity | 180% | Scales how much the bars react to mic input |
-| Show Cancel Button | on | Cancel the current recording without transcribing it |
+| Show Cancel Button | on | Cancel the current recording or transcription |
 | Show Final Transcript | on | Display the final recognized text after transcribing |
 | Transcript Time On Screen | 3600ms | How long the transcript bubble stays visible |
 | Pill Opacity | 94% | Overall opacity of the recording pill |
@@ -107,13 +108,15 @@ removes files created by setup.
 ## How it works
 
 ```
-VoxType (recording)  →  Cava (audio visualizer)  →  Pill (frequency bars)
+VoxType (recording)  →  Cava (audio visualizer)  →  Pill (visualizer + cancel)
                                                          ↓
-VoxType (transcribing)  →  VoxType (idle)  →  post_process hook
+VoxType (transcribing)  →  Pill stays visible (spinner + cancel)
                                                          ↓
-                                           capture script saves transcript
-                                                         ↓
-                                           DMS plugin reads and shows bubble
+VoxType (idle)  →  post_process hook
+                         ↓
+           capture script saves transcript
+                         ↓
+           DMS plugin reads and shows bubble
 ```
 
 The overlay is a full-width transparent layer-shell window pinned to the bottom edge. The pill and transcript bubble are centered inside it, so they work at any screen width.

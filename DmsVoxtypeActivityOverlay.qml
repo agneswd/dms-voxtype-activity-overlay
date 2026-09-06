@@ -7,8 +7,8 @@ import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
 
-// Daemon plugin: shows a Cava audio-visualization pill whenever
-// VoxType transitions into the "recording" state.
+// Daemon plugin: shows a Cava audio-visualization pill while VoxType
+// records, then a spinner in that slot while it transcribes.
 PluginComponent {
     id: root
 
@@ -26,16 +26,30 @@ PluginComponent {
     property real transcriptOpacityValue: (pluginData.transcriptOpacity || 96) / 100.0
     property string transcriptCapturePath: stateDir + "/activity-overlay-last.txt"
     property bool isRecording: false
+    property bool waitingForTranscript: false
+    property bool pendingGeneration: false
+    property bool cancelRequested: false
+    property bool displayGenerating: false
     property bool transcriptVisible: false
     property string transcriptText: ""
     property var barValues: Array.from({ length: 12 }, () => 0)
     property var waveformSamples: Array.from({ length: 26 }, () => 0)
     property real waveformScrollProgress: 0
+    readonly property bool isGenerating: currentState === "transcribing" || waitingForTranscript || pendingGeneration
+    readonly property bool pillActive: isRecording || isGenerating
+    readonly property bool showTrailingSlot: showCancelButton && (isRecording || displayGenerating)
+    readonly property int pillWidth: displayGenerating
+        ? (showTrailingSlot ? 104 : 64)
+        : (showTrailingSlot ? 216 : 176)
 
     function resetOverlayState(clearTranscript) {
         barValues = Array.from({ length: 12 }, () => 0)
         waveformSamples = Array.from({ length: 26 }, () => 0)
         waveformScrollProgress = 0
+        waitingForTranscript = false
+        pendingGeneration = false
+        cancelRequested = false
+        displayGenerating = false
 
         if (clearTranscript) {
             transcriptVisible = false
@@ -44,6 +58,13 @@ PluginComponent {
 
         transcriptHideTimer.stop()
         transcriptFetchDelay.stop()
+        transcriptWaitTimeout.stop()
+        generatingHoldTimeout.stop()
+    }
+
+    function finishTranscriptWait() {
+        waitingForTranscript = false
+        transcriptWaitTimeout.stop()
     }
 
     function appendWaveformSample() {
@@ -54,8 +75,15 @@ PluginComponent {
     }
 
     function cancelRecording() {
-        if (isRecording && !cancelProcess.running)
+        if (waitingForTranscript) {
+            resetOverlayState(true)
+            return
+        }
+
+        if ((isRecording || isGenerating) && !cancelProcess.running) {
+            cancelRequested = true
             cancelProcess.running = true
+        }
     }
 
     onIsRecordingChanged: {
@@ -63,6 +91,11 @@ PluginComponent {
             resetOverlayState(true)
             transcriptResetter.running = true
         }
+    }
+
+    onIsGeneratingChanged: {
+        if (isGenerating)
+            displayGenerating = true
     }
 
     Timer {
@@ -86,6 +119,27 @@ PluginComponent {
         onTriggered: root.transcriptVisible = false
     }
 
+    Timer {
+        id: transcriptWaitTimeout
+        interval: 5000
+        repeat: false
+        onTriggered: root.finishTranscriptWait()
+    }
+
+    Timer {
+        id: generatingHoldTimeout
+        interval: 1500
+        repeat: false
+        onTriggered: {
+            if (root.currentState === "transcribing" || root.waitingForTranscript)
+                return
+
+            root.pendingGeneration = false
+            if (!root.pillActive)
+                root.displayGenerating = false
+        }
+    }
+
     Process {
         id: transcriptResetter
         command: ["rm", "-f", "--", root.transcriptCapturePath]
@@ -100,12 +154,14 @@ PluginComponent {
         stdout: StdioCollector {
             onStreamFinished: {
                 const text = this.text.trim()
-                if (!text)
-                    return
+                if (text) {
+                    root.transcriptText = text
+                    root.transcriptVisible = true
+                    transcriptHideTimer.restart()
+                }
 
-                root.transcriptText = text
-                root.transcriptVisible = true
-                transcriptHideTimer.restart()
+                root.pendingGeneration = false
+                root.finishTranscriptWait()
             }
         }
     }
@@ -126,11 +182,35 @@ PluginComponent {
                     const nextState = obj.class || "idle"
                     const previousState = root.currentState
 
+                    if (root.cancelRequested && nextState !== "recording") {
+                        root.currentState = nextState
+                        root.isRecording = false
+                        root.resetOverlayState(true)
+                        return
+                    }
+
+                    // Hold the generating pill before recording drops, so a
+                    // brief idle gap cannot hide the overlay.
+                    if (previousState === "recording" && nextState !== "recording") {
+                        root.pendingGeneration = true
+                        root.displayGenerating = true
+                        generatingHoldTimeout.restart()
+                    }
+
+                    if (nextState === "transcribing")
+                        generatingHoldTimeout.stop()
+
+                    if (previousState === "transcribing" && nextState === "idle") {
+                        root.pendingGeneration = false
+                        if (root.showTranscriptText) {
+                            root.waitingForTranscript = true
+                            transcriptWaitTimeout.restart()
+                            transcriptFetchDelay.restart()
+                        }
+                    }
+
                     root.currentState = nextState
                     root.isRecording = (nextState === "recording")
-
-                    if (root.showTranscriptText && previousState === "transcribing" && nextState === "idle")
-                        transcriptFetchDelay.restart()
                 } catch (_) {}
             }
         }
@@ -200,6 +280,7 @@ PluginComponent {
 
         onExited: exitCode => {
             if (exitCode !== 0) {
+                root.cancelRequested = false
                 const details = errorOutput.trim() || "voxtype record cancel exited with code " + exitCode
                 ToastService.showError("Failed to cancel VoxType", details, "", "voxtype-activity-overlay-cancel")
             }
@@ -212,7 +293,7 @@ PluginComponent {
     // it works on any screen width without hardcoding pixels.
     PanelWindow {
         id: overlay
-        visible: root.isRecording || (root.showTranscriptText && root.transcriptVisible)
+        visible: root.pillActive || root.displayGenerating || (root.showTranscriptText && root.transcriptVisible)
         mask: Region {
             item: cancelButton
         }
@@ -234,6 +315,8 @@ PluginComponent {
         onVisibleChanged: {
             if (visible && root.isRecording)
                 root.resetOverlayState(true)
+            if (!visible && !root.isGenerating)
+                root.displayGenerating = false
         }
 
         Rectangle {
@@ -282,14 +365,24 @@ PluginComponent {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 12
-            width: root.showCancelButton ? 216 : 176
+            width: root.pillWidth
             height: 48
             radius: height / 2
 
+            Behavior on width {
+                enabled: opacity > 0
+                NumberAnimation { duration: 180; easing.type: Easing.InOutQuad }
+            }
+
             // Animate in/out - opacity on Item is valid
-            opacity: root.isRecording ? root.pillOpacityValue : 0.0
+            opacity: root.pillActive ? root.pillOpacityValue : 0.0
             Behavior on opacity {
                 NumberAnimation { duration: 220; easing.type: Easing.InOutQuad }
+            }
+
+            onOpacityChanged: {
+                if (opacity < 0.01 && !root.isGenerating)
+                    root.displayGenerating = false
             }
 
             color: Theme.withAlpha(Theme.surfaceContainerHigh, 0.94)
@@ -301,15 +394,25 @@ PluginComponent {
                 spacing: 8
 
                 Item {
-                    width: 144
+                    width: root.displayGenerating ? 32 : 144
                     height: 36
                     anchors.verticalCenter: parent.verticalCenter
-                    clip: true
+                    clip: !root.displayGenerating
+
+                    DankSpinner {
+                        id: generatingSpinner
+                        visible: root.displayGenerating
+                        running: visible
+                        anchors.centerIn: parent
+                        size: 20
+                        strokeWidth: 2.25
+                        color: Theme.primary
+                    }
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
-                        visible: root.visualizerMode !== "waveform"
+                        visible: root.isRecording && !root.displayGenerating && root.visualizerMode !== "waveform"
 
                         Repeater {
                             model: 12
@@ -343,7 +446,7 @@ PluginComponent {
 
                     Item {
                         anchors.fill: parent
-                        visible: root.visualizerMode === "waveform"
+                        visible: root.isRecording && !root.displayGenerating && root.visualizerMode === "waveform"
 
                         Repeater {
                             model: 26
@@ -365,12 +468,12 @@ PluginComponent {
 
                 DankActionButton {
                     id: cancelButton
-                    visible: root.showCancelButton && root.isRecording
+                    visible: root.showTrailingSlot
                     anchors.verticalCenter: parent.verticalCenter
                     buttonSize: 32
                     iconName: "close"
                     iconColor: Theme.error
-                    tooltipText: "Cancel recording"
+                    tooltipText: root.displayGenerating ? "Cancel transcription" : "Cancel recording"
                     enabled: !cancelProcess.running
                     opacity: enabled ? 1 : 0.5
                     onClicked: root.cancelRecording()

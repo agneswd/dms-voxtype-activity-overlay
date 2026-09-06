@@ -52,7 +52,7 @@ PluginSettings {
             id: showCancelButton
             settingKey: "showCancelButton"
             label: I18n.tr("Show Cancel Button")
-            description: I18n.tr("Show a button in both visualizer modes that cancels the current recording without transcribing it.")
+            description: I18n.tr("Show a button that cancels the current recording or transcription.")
             defaultValue: true
         }
     }
