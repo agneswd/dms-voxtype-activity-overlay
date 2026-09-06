@@ -17,6 +17,24 @@ grep -Fq 'transcriptResetter.running = true' "$QML" ||
     fail "recording start does not reset the transcript file"
 grep -Fq 'if (transcriptResetter.running)' "$QML" ||
     fail "transcript reader does not wait for reset"
+grep -Fq 'readonly property bool isGenerating: currentState === "transcribing" || waitingForTranscript || pendingGeneration' "$QML" ||
+    fail "generating state does not cover transcribing and transcript wait"
+grep -Fq 'opacity: root.pillActive ? root.pillOpacityValue : 0.0' "$QML" ||
+    fail "pill does not stay visible while generating"
+grep -Fq 'visible: root.pillActive || root.displayGenerating || (root.showTranscriptText && root.transcriptVisible)' "$QML" ||
+    fail "overlay does not stay mapped while the generating pill is up"
+grep -Fq 'root.pendingGeneration = true' "$QML" ||
+    fail "recording end does not hold the generating pill"
+grep -Fq 'DankSpinner' "$QML" ||
+    fail "generating spinner is missing"
+grep -Fq 'visible: root.isRecording && !root.displayGenerating && root.visualizerMode === "waveform"' "$QML" ||
+    fail "waveform is not held hidden after generating"
+grep -Fq 'readonly property bool showTrailingSlot: showCancelButton && (isRecording || displayGenerating)' "$QML" ||
+    fail "cancel button is not kept while generating"
+grep -Fq '? (showTrailingSlot ? 104 : 64)' "$QML" ||
+    fail "pill does not shrink to the spinner while generating"
+grep -Fq 'root.finishTranscriptWait()' "$QML" ||
+    fail "transcript wait is not cleared after read"
 
 capture_path="$TEST_ROOT/activity-overlay-last.txt"
 printf 'previous transcript\n' > "$capture_path"
