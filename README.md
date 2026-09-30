@@ -28,6 +28,11 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) daemon p
 
 ## Install
 
+Run `setup.sh` manually after installation, including installation through the DMS plugin registry.
+It installs the Cava configuration and edits VoxType's `config.toml` to capture transcripts.
+It keeps a backup and preserves an existing post-process command.
+Both setup and the plugin use `XDG_CONFIG_HOME`, with `~/.config` as the default.
+
 ### Quick start (recommended)
 
 ```sh
