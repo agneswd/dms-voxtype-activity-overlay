@@ -14,6 +14,7 @@ PluginComponent {
 
     // ── State ─────────────────────────────────────────────────
     property string homeDir: Quickshell.env("HOME") || "/home/" + Quickshell.env("USER")
+    property string configDir: Quickshell.env("XDG_CONFIG_HOME") || homeDir + "/.config"
     property string stateDir: (Quickshell.env("XDG_STATE_HOME") || homeDir + "/.local/state") + "/voxtype"
     property string currentState: "idle"
     property string visualizerMode: pluginData.visualizerMode || "waveform"
@@ -166,14 +167,28 @@ PluginComponent {
         }
     }
 
-    // ── VoxType status watcher ─────────────────────────────────
+    // VoxType status watcher
     // `voxtype status --follow --format json` streams one JSON
     // object per line whenever the daemon state changes.
+    Timer {
+        id: voxWatcherRetry
+        interval: 5000
+        repeat: false
+        onTriggered: voxWatcher.running = true
+    }
+
     Process {
         id: voxWatcher
         command: ["voxtype", "status", "--follow", "--format", "json"]
         running: true
-        onRunningChanged: if (!running) running = true
+        onRunningChanged: {
+            if (!running) {
+                root.currentState = "idle"
+                root.isRecording = false
+                root.resetOverlayState(true)
+                voxWatcherRetry.restart()
+            }
+        }
 
         stdout: SplitParser {
             onRead: line => {
@@ -224,7 +239,7 @@ PluginComponent {
         id: cavaProc
         command: [
             "cava", "-p",
-            Quickshell.env("HOME") + "/.config/cava/dms-voxtype-activity-overlay.ini"
+            root.configDir + "/cava/dms-voxtype-activity-overlay.ini"
         ]
         running: root.isRecording
 
@@ -323,10 +338,10 @@ PluginComponent {
             id: transcriptBubble
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: pill.top
-            anchors.bottomMargin: 10
-            width: Math.min(Math.min(parent.width - 64, 720), Math.max(120, transcriptTextMetrics.width + 28))
-            height: transcriptLabel.implicitHeight + 24
-            radius: 16
+            anchors.bottomMargin: Theme.spacingS
+            width: Math.min(Math.min(parent.width - Theme.spacingL * 4, 720), Math.max(120, transcriptTextMetrics.width + Theme.spacingM * 2))
+            height: transcriptLabel.implicitHeight + Theme.spacingM * 2
+            radius: Theme.cornerRadius
             visible: opacity > 0
             opacity: (root.showTranscriptText && root.transcriptVisible) ? root.transcriptOpacityValue : 0.0
 
@@ -347,9 +362,9 @@ PluginComponent {
             Text {
                 id: transcriptLabel
                 anchors.fill: parent
-                anchors.margins: 12
+                anchors.margins: Theme.spacingM
                 color: Theme.surfaceText
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeMedium
                 font.weight: Font.Medium
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 horizontalAlignment: Text.AlignHCenter
@@ -364,7 +379,7 @@ PluginComponent {
             id: pill
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 12
+            anchors.bottomMargin: Theme.spacingM
             width: root.pillWidth
             height: 48
             radius: height / 2
@@ -391,7 +406,7 @@ PluginComponent {
 
             Row {
                 anchors.centerIn: parent
-                spacing: 8
+                spacing: Theme.spacingS
 
                 Item {
                     width: root.displayGenerating ? 32 : 144
@@ -411,7 +426,7 @@ PluginComponent {
 
                     Row {
                         anchors.centerIn: parent
-                        spacing: 4
+                        spacing: Theme.spacingXS
                         visible: root.isRecording && !root.displayGenerating && root.visualizerMode !== "waveform"
 
                         Repeater {
