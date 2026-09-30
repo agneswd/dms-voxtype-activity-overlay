@@ -3,7 +3,7 @@
   "id": "voxtypeActivityOverlay",
   "name": "VoxType Activity Overlay",
   "description": "Live microphone activity overlay while VoxType is recording. Shows frequency bars or a scrolling waveform, a cancel button, a transcribing spinner in the visualizer, and the final transcript.",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "author": "agneswd",
   "license": "MIT",
   "type": "daemon",

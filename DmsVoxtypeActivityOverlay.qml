@@ -14,6 +14,7 @@ PluginComponent {
 
     // ── State ─────────────────────────────────────────────────
     property string homeDir: Quickshell.env("HOME") || "/home/" + Quickshell.env("USER")
+    property string configDir: Quickshell.env("XDG_CONFIG_HOME") || homeDir + "/.config"
     property string stateDir: (Quickshell.env("XDG_STATE_HOME") || homeDir + "/.local/state") + "/voxtype"
     property string currentState: "idle"
     property string visualizerMode: pluginData.visualizerMode || "waveform"
@@ -166,14 +167,28 @@ PluginComponent {
         }
     }
 
-    // ── VoxType status watcher ─────────────────────────────────
+    // VoxType status watcher
     // `voxtype status --follow --format json` streams one JSON
     // object per line whenever the daemon state changes.
+    Timer {
+        id: voxWatcherRetry
+        interval: 5000
+        repeat: false
+        onTriggered: voxWatcher.running = true
+    }
+
     Process {
         id: voxWatcher
         command: ["voxtype", "status", "--follow", "--format", "json"]
         running: true
-        onRunningChanged: if (!running) running = true
+        onRunningChanged: {
+            if (!running) {
+                root.currentState = "idle"
+                root.isRecording = false
+                root.resetOverlayState(true)
+                voxWatcherRetry.restart()
+            }
+        }
 
         stdout: SplitParser {
             onRead: line => {
@@ -224,7 +239,7 @@ PluginComponent {
         id: cavaProc
         command: [
             "cava", "-p",
-            Quickshell.env("HOME") + "/.config/cava/dms-voxtype-activity-overlay.ini"
+            root.configDir + "/cava/dms-voxtype-activity-overlay.ini"
         ]
         running: root.isRecording
 
