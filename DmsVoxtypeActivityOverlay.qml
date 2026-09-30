@@ -338,10 +338,10 @@ PluginComponent {
             id: transcriptBubble
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: pill.top
-            anchors.bottomMargin: 10
-            width: Math.min(Math.min(parent.width - 64, 720), Math.max(120, transcriptTextMetrics.width + 28))
-            height: transcriptLabel.implicitHeight + 24
-            radius: 16
+            anchors.bottomMargin: Theme.spacingS
+            width: Math.min(Math.min(parent.width - Theme.spacingL * 4, 720), Math.max(120, transcriptTextMetrics.width + Theme.spacingM * 2))
+            height: transcriptLabel.implicitHeight + Theme.spacingM * 2
+            radius: Theme.cornerRadius
             visible: opacity > 0
             opacity: (root.showTranscriptText && root.transcriptVisible) ? root.transcriptOpacityValue : 0.0
 
@@ -362,9 +362,9 @@ PluginComponent {
             Text {
                 id: transcriptLabel
                 anchors.fill: parent
-                anchors.margins: 12
+                anchors.margins: Theme.spacingM
                 color: Theme.surfaceText
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeMedium
                 font.weight: Font.Medium
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 horizontalAlignment: Text.AlignHCenter
@@ -379,7 +379,7 @@ PluginComponent {
             id: pill
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 12
+            anchors.bottomMargin: Theme.spacingM
             width: root.pillWidth
             height: 48
             radius: height / 2
@@ -406,7 +406,7 @@ PluginComponent {
 
             Row {
                 anchors.centerIn: parent
-                spacing: 8
+                spacing: Theme.spacingS
 
                 Item {
                     width: root.displayGenerating ? 32 : 144
@@ -426,7 +426,7 @@ PluginComponent {
 
                     Row {
                         anchors.centerIn: parent
-                        spacing: 4
+                        spacing: Theme.spacingXS
                         visible: root.isRecording && !root.displayGenerating && root.visualizerMode !== "waveform"
 
                         Repeater {
